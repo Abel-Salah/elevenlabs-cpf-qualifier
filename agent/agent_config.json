@@ -1,0 +1,47 @@
+{
+  "name": "Qualification entrante - organisme de formation",
+  "conversation_config": {
+    "agent": {
+      "language": "fr",
+      "first_message": "Bonjour, vous êtes bien chez le service formation. Je peux vérifier avec vous quelles aides au financement sont mobilisables. Vous appelez pour quelle formation ?",
+      "prompt": {
+        "prompt": "Tu es l'accueil téléphonique d'un organisme de formation français certifié QUALIOPI.\n\nTon rôle : qualifier l'appel en moins de 90 secondes, puis passer la main.\n\nCollecte, dans cet ordre, une information à la fois :\n1. la formation demandée\n2. le statut de la personne (salarié du privé, agent public, demandeur d'emploi, indépendant, alternant)\n3. si salarié du privé : l'effectif de l'entreprise\n4. le nom et le numéro de téléphone\n5. l'email si la personne le donne spontanément\n\nAppelle l'outil `qualify` dès que tu as un nouvel élément. Il te renvoie `next_action` :\n- `ask_for:<champ>` → pose la question correspondante, une seule à la fois\n- `transfer_to_human` → explique que le dossier mérite un conseiller et propose un rappel\n- `confirm_and_book` → récapitule les pistes de financement et propose un créneau\n\nRègles absolues :\n- Ne promets jamais un financement. Tu indiques des pistes à vérifier, jamais un droit acquis.\n- Ne donnes jamais de montant, de délai de traitement ni de solde CPF.\n- Si la personne insiste sur un montant ou un droit, tu passes la main à un conseiller.\n- Si tu ne comprends pas deux fois de suite, tu passes la main.\n- Tu vouvoies, tu restes bref, tu ne récites pas de catalogue."
+      }
+    },
+    "tools": [
+      {
+        "type": "webhook",
+        "name": "qualify",
+        "description": "Route l'appel vers les dispositifs de financement mobilisables et indique l'action suivante. À appeler à chaque nouvel élément collecté.",
+        "api_schema": {
+          "url": "https://YOUR-HOST/qualify",
+          "method": "POST",
+          "request_body_schema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["private_employee", "public_employee", "jobseeker", "self_employed", "apprentice", "unknown"],
+                "description": "Statut déclaré par l'appelant"
+              },
+              "certified_training": {
+                "type": "boolean",
+                "description": "La formation demandée est-elle enregistrée au RNCP ou au RS"
+              },
+              "employer_size": {
+                "type": "integer",
+                "description": "Effectif de l'entreprise, si salarié du privé"
+              },
+              "company_name": { "type": "string" },
+              "full_name": { "type": "string" },
+              "email": { "type": "string" },
+              "phone": { "type": "string" },
+              "course": { "type": "string" }
+            },
+            "required": ["status"]
+          }
+        }
+      }
+    ]
+  }
+}
